@@ -4,16 +4,16 @@ from .base_frontend import ScatteringBase2D
 import numpy as np
 
 class ScatteringNumPy2D(ScatteringNumPy, ScatteringBase2D):
-    def __init__(self, J, shape, L=8, max_order=2, pre_pad=False,
-            backend='numpy', out_type='array'):
+    def __init__(self, J, shape, L=8, OS=0, max_order=2, pre_pad=False,
+            backend='numpy', out_type='array', cplx=False):
         ScatteringNumPy.__init__(self)
-        ScatteringBase2D.__init__(self, J, shape, L, max_order, pre_pad,
-                backend, out_type)
+        ScatteringBase2D.__init__(self, J, shape, L, OS, max_order, pre_pad,
+                backend, out_type, cplx=cplx)
         ScatteringBase2D._instantiate_backend(self, 'kymatio.scattering2d.backend.')
         ScatteringBase2D.build(self)
         ScatteringBase2D.create_filters(self)
 
-    def scattering(self, input):
+    def scattering(self, input, local=False):
         if not type(input) is np.ndarray:
             raise TypeError('The input should be a NumPy array.')
 
@@ -36,15 +36,21 @@ class ScatteringNumPy2D(ScatteringNumPy, ScatteringBase2D):
         input = input.reshape((-1,) + signal_shape)
 
         S = scattering2d(input, self.pad, self.unpad, self.backend, self.J,
-                self.L, self.phi, self.psi, self.max_order, self.out_type)
+                self.L, self.OS, self.phi, self.psi, self.max_order, self.out_type, local=local)
 
         if self.out_type == 'array':
-            scattering_shape = S.shape[-3:]
+            if local:
+                scattering_shape = S.shape[-3:]
+            else:
+                scattering_shape = S.shape[-1:]
             new_shape = batch_shape + scattering_shape
 
             S = S.reshape(new_shape)
         else:
-            scattering_shape = S[0]['coef'].shape[-2:]
+            if local:
+                scattering_shape = S[0]['coef'].shape[-2:]
+            else:
+                scattering_shape = ()
             new_shape = batch_shape + scattering_shape
 
             for x in S:

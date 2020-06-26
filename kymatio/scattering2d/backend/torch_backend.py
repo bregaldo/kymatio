@@ -6,7 +6,7 @@ from collections import namedtuple
 
 BACKEND_NAME = 'torch'
 
-from ...backend.torch_backend import _is_complex, cdgmm, type_checks, Modulus, concatenate
+from ...backend.torch_backend import _is_complex, cdgmm, type_checks, Modulus, concatenate, mean
 from ...backend.base_backend import FFT
 
 
@@ -151,12 +151,13 @@ fft = FFT(lambda x: torch.fft(x, 2, normalized=False),
           type_checks)
 
 
-backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate'])
+backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate', 'mean'])
 backend.name = 'torch'
 backend.cdgmm = cdgmm
+backend.mean = mean
 backend.modulus = Modulus()
 backend.subsample_fourier = SubsampleFourier()
 backend.fft = fft
 backend.Pad = Pad
 backend.unpad = unpad
-backend.concatenate = lambda x: concatenate(x, -3)
+backend.concatenate = lambda x, axis: concatenate(x, axis)

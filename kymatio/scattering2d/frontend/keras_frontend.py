@@ -7,10 +7,10 @@ from tensorflow.python.framework import tensor_shape
 
 
 class ScatteringKeras2D(ScatteringKeras, ScatteringBase2D):
-    def __init__(self, J, L=8, max_order=2, pre_pad=False):
+    def __init__(self, J, L=8, OS=0, max_order=2, pre_pad=False, cplx=False):
         ScatteringKeras.__init__(self)
-        ScatteringBase2D.__init__(self, J, None, L, max_order, pre_pad,
-                                  'array')
+        ScatteringBase2D.__init__(self, J, None, L, OS, max_order, pre_pad,
+                                  'array', cplx=cplx)
 
     def build(self, input_shape):
         shape = tuple(tensor_shape.TensorShape(input_shape).as_list()[-2:])

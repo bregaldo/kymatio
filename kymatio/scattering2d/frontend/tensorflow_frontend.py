@@ -4,16 +4,16 @@ from ...scattering2d.core.scattering2d import scattering2d
 from .base_frontend import ScatteringBase2D
 
 class ScatteringTensorFlow2D(ScatteringTensorFlow, ScatteringBase2D):
-    def __init__(self, J, shape, L=8, max_order=2, pre_pad=False,
-            backend='tensorflow', name='Scattering2D', out_type='array'):
+    def __init__(self, J, shape, L=8, OS=0, max_order=2, pre_pad=False,
+            backend='tensorflow', name='Scattering2D', out_type='array', cplx=False):
         ScatteringTensorFlow.__init__(self, name)
-        ScatteringBase2D.__init__(self, J, shape, L, max_order, pre_pad,
-                backend, out_type)
+        ScatteringBase2D.__init__(self, J, shape, L, OS, max_order, pre_pad,
+                backend, out_type, cplx=cplx)
         ScatteringBase2D._instantiate_backend(self, 'kymatio.scattering2d.backend.')
         ScatteringBase2D.build(self)
         ScatteringBase2D.create_filters(self)
 
-    def scattering(self, input):
+    def scattering(self, input, local=False):
         with tf.name_scope('scattering') as scope:
             try:
                 input = tf.convert_to_tensor(input)
@@ -42,16 +42,22 @@ class ScatteringTensorFlow2D(ScatteringTensorFlow, ScatteringBase2D):
             # tf.Tensors and that would add their values.
             input = tf.reshape(input, tf.concat(((-1,), signal_shape), 0))
 
-            S = scattering2d(input, self.pad, self.unpad, self.backend, self.J, self.L, self.phi, self.psi,
-                             self.max_order, self.out_type)
+            S = scattering2d(input, self.pad, self.unpad, self.backend, self.J, self.L, self.OS, self.phi, self.psi,
+                             self.max_order, self.out_type, local=local)
 
             if self.out_type == 'array':
-                scattering_shape = tf.shape(S)[-3:]
+                if local:
+                    scattering_shape = tf.shape(S)[-3:]
+                else:
+                    scattering_shape = tf.shape(S)[-1:]
                 new_shape = tf.concat((batch_shape, scattering_shape), 0)
 
                 S = tf.reshape(S, new_shape)
             else:
-                scattering_shape = tf.shape(S[0]['coef'])[-2:]
+                if local:
+                    scattering_shape = tf.shape(S[0]['coef'])[-2:]
+                else:
+                    scattering_shape = ()
                 new_shape = tf.concat((batch_shape, scattering_shape), 0)
 
                 for x in S:

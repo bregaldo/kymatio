@@ -5,8 +5,8 @@ from ..utils import compute_padding
 
 
 class ScatteringBase2D(ScatteringBase):
-    def __init__(self, J, shape, L=8, max_order=2, pre_pad=False,
-            backend=None, out_type='array'):
+    def __init__(self, J, shape, L=8, OS=0, max_order=2, pre_pad=False,
+            backend=None, out_type='array', cplx=False):
         super(ScatteringBase2D, self).__init__()
         self.pre_pad = pre_pad
         self.L = L
@@ -15,20 +15,24 @@ class ScatteringBase2D(ScatteringBase):
         self.shape = shape
         self.max_order = max_order
         self.out_type = out_type
+        self.cplx = cplx
+        self.OS = OS
 
     def build(self):
         self.M, self.N = self.shape
 
         if 2 ** self.J > self.M or 2 ** self.J > self.N:
             raise RuntimeError('The smallest dimension should be larger than 2^J.')
-        self.M_padded, self.N_padded = compute_padding(self.M, self.N, self.J)
+        # self.M_padded, self.N_padded = compute_padding(self.M, self.N, self.J)
+        self.M_padded, self.N_padded = self.M, self.N # No padding!
         # pads equally on a given side if the amount of padding to add is an even number of pixels, otherwise it adds an extra pixel
         self.pad = self.backend.Pad([(self.M_padded - self.M) // 2, (self.M_padded - self.M+1) // 2, (self.N_padded - self.N) // 2,
                                 (self.N_padded - self.N + 1) // 2], [self.M, self.N], pre_pad=self.pre_pad)
         self.unpad = self.backend.unpad
+        self.unpad = lambda x: x # No unpadding neither
 
     def create_filters(self):
-        filters = filter_bank(self.M_padded, self.N_padded, self.J, self.L)
+        filters = filter_bank(self.M_padded, self.N_padded, self.J, self.L, cplx=self.cplx)
         self.phi, self.psi = filters['phi'], filters['psi']
 
     _doc_shape = 'M, N'

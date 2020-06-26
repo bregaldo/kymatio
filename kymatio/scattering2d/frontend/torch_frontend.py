@@ -6,8 +6,8 @@ from ...frontend.torch_frontend import ScatteringTorch
 
 
 class ScatteringTorch2D(ScatteringTorch, ScatteringBase2D):
-    def __init__(self, J, shape, L=8, max_order=2, pre_pad=False,
-            backend='torch', out_type='array'):
+    def __init__(self, J, shape, L=8, OS=0, max_order=2, pre_pad=False,
+            backend='torch', out_type='array', cplx=False):
         ScatteringTorch.__init__(self)
         ScatteringBase2D.__init__(**locals())
         ScatteringBase2D._instantiate_backend(self, 'kymatio.scattering2d.backend.')
@@ -74,7 +74,7 @@ class ScatteringTorch2D(ScatteringTorch, ScatteringBase2D):
 
         return phis, psis
 
-    def scattering(self, input):
+    def scattering(self, input, local=False):
         if not torch.is_tensor(input):
             raise TypeError('The input should be a PyTorch Tensor.')
 
@@ -101,13 +101,19 @@ class ScatteringTorch2D(ScatteringTorch, ScatteringBase2D):
         input = input.reshape((-1,) + signal_shape)
 
         S = scattering2d(input, self.pad, self.unpad, self.backend, self.J,
-                            self.L, phi, psi, self.max_order, self.out_type)
+                            self.L, self.OS, phi, psi, self.max_order, self.out_type, local=local)
 
         if self.out_type == 'array':
-            scattering_shape = S.shape[-3:]
+            if local:
+                scattering_shape = S.shape[-3:]
+            else:
+                scattering_shape = S.shape[-1:]
             S = S.reshape(batch_shape + scattering_shape)
         else:
-            scattering_shape = S[0]['coef'].shape[-2:]
+            if local:
+                scattering_shape = S[0]['coef'].shape[-2:]
+            else:
+                scattering_shape = ()
             new_shape = batch_shape + scattering_shape
 
             for x in S:

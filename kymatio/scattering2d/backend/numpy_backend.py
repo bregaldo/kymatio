@@ -6,7 +6,7 @@ from collections import namedtuple
 BACKEND_NAME = 'numpy'
 
 
-from ...backend.numpy_backend import modulus, cdgmm
+from ...backend.numpy_backend import modulus, cdgmm, mean
 from ...backend.base_backend import FFT
 
 
@@ -85,12 +85,13 @@ class SubsampleFourier(object):
         return out
 
 
-def concatenate(arrays):
-    return np.stack(arrays, axis=-3)
+def concatenate(arrays, axis):
+    return np.stack(arrays, axis=axis)
 
 
-backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate'])
+backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate', 'mean'])
 backend.name = 'numpy'
+backend.mean = mean
 backend.cdgmm = cdgmm
 backend.modulus = modulus
 backend.subsample_fourier = SubsampleFourier()

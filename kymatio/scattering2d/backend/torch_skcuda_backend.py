@@ -183,13 +183,15 @@ from .torch_backend import unpad
 from .torch_backend import Pad
 from .torch_backend import fft
 from .torch_backend import concatenate
+from .torch_backend import mean
 
-backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate'])
+backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate', 'mean'])
 backend.name = 'torch_skcuda'
+backend.mean = mean
 backend.cdgmm = cdgmm
 backend.modulus = Modulus()
 backend.subsample_fourier = SubsampleFourier()
 backend.fft = fft
 backend.Pad = Pad
 backend.unpad = unpad
-backend.concatenate = lambda x: concatenate(x, -3)
+backend.concatenate = lambda x, axis: concatenate(x, axis)

@@ -24,6 +24,8 @@ def modulus(x):
     """
     return np.abs(x)
 
+def mean(a, axis=None):
+    return np.mean(a, axis=axis)
 
 def _is_complex(x):
     return (x.dtype == np.complex64) or (x.dtype == np.complex128)

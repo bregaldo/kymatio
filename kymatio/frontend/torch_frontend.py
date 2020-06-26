@@ -11,16 +11,16 @@ class ScatteringTorch(nn.Module):
         saving those arrays as module buffers. """
         raise NotImplementedError
 
-    def scattering(self, x):
+    def scattering(self, x, local=False):
         """ This function should compute the scattering transform."""
         raise NotImplementedError
 
-    def forward(self, x):
+    def forward(self, x, local=False):
         """This method is an alias for `scattering`."""
 
         input_checks(x)
 
-        return self.scattering(x)
+        return self.scattering(x, local=local)
 
     _doc_array = 'torch.Tensor'
     _doc_array_n = ''

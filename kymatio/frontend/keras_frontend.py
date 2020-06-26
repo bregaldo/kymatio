@@ -10,11 +10,11 @@ class ScatteringKeras(Layer):
         self.shape = input_shape
         Layer.build(self, input_shape)
 
-    def scattering(self, x):
-        return self.S.scattering(x)
+    def scattering(self, x, local=False):
+        return self.S.scattering(x, local=local)
 
-    def call(self, x):
-        return self.scattering(x)
+    def call(self, x, local=False):
+        return self.scattering(x, local=local)
 
     _doc_array = 'tf.Tensor'
     _doc_array_n = ''

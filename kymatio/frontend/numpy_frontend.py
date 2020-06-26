@@ -4,16 +4,16 @@ class ScatteringNumPy:
     def __init__(self):
         self.frontend_name = 'numpy'
 
-    def scattering(self, x):
+    def scattering(self, x, local=False):
         """ This function should compute the scattering transform."""
         raise NotImplementedError
 
-    def __call__(self, x):
+    def __call__(self, x, local=False):
         """This method is an alias for `scattering`."""
 
         input_checks(x)
 
-        return self.scattering(x)
+        return self.scattering(x, local=local)
 
     _doc_array = 'np.ndarray'
     _doc_array_n = 'n'

@@ -145,6 +145,9 @@ def type_checks(x):
     if not x.is_contiguous():
         raise RuntimeError('Tensors must be contiguous.')
 
+def mean(a, axis=None):
+    return torch.mean(a, dim=axis)
+
 def cdgmm(A, B, inplace=False):
     """Complex pointwise multiplication.
 
