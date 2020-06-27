@@ -2,13 +2,14 @@
 # Scientific Ancestry: Edouard Oyallon, Laurent Sifre, Joan Bruna
 
 def scattering2d(x, pad, unpad, backend, J, L, OS, phi, psi, max_order,
-        out_type='array', local=False):
+        out_type='array', local=False, loc_cplx=False):
     subsample_fourier = backend.subsample_fourier
     modulus = backend.modulus
     fft = backend.fft
     cdgmm = backend.cdgmm
     concatenate = backend.concatenate
     mean = backend.mean
+    real = backend.real
 
     # Define lists for output.
     out_S_0, out_S_1, out_S_2 = [], [], []
@@ -23,10 +24,18 @@ def scattering2d(x, pad, unpad, backend, J, L, OS, phi, psi, max_order,
         U_1_c = cdgmm(U_0_c, phi[0])
         U_1_c = subsample_fourier(U_1_c, k=2 ** max(J - OS, 0))
     
-        S_0 = fft(U_1_c, 'C2R', inverse=True)
+        if loc_cplx:
+            S_0 = fft(U_1_c, 'C2C', inverse=True)
+            S_0 = real(modulus(S_0))
+        else:
+            S_0 = fft(U_1_c, 'C2R', inverse=True)
         S_0 = unpad(S_0)
     else:
-        S_0 = fft(U_0_c, 'C2R', inverse=True)
+        if loc_cplx:
+            S_0 = fft(U_0_c, 'C2C', inverse=True)
+            S_0 = real(modulus(S_0))
+        else:
+            S_0 = fft(U_0_c, 'C2R', inverse=True)
         S_0 = unpad(S_0)
         S_0 = mean(S_0, axis=(-1, -2))
 
@@ -37,6 +46,9 @@ def scattering2d(x, pad, unpad, backend, J, L, OS, phi, psi, max_order,
     for n1 in range(len(psi)):
         j1 = psi[n1]['j']
         theta1 = psi[n1]['theta']
+        
+        if theta1 >= L and not loc_cplx:
+            continue
 
         U_1_c = cdgmm(U_0_c, psi[n1][resU0])
         if j1 > 0:
@@ -68,9 +80,8 @@ def scattering2d(x, pad, unpad, backend, J, L, OS, phi, psi, max_order,
             j2 = psi[n2]['j']
             theta2 = psi[n2]['theta']
 
-            if j2 <= j1:
+            if j2 <= j1 or theta2 >= L:
                 continue
-
             U_2_c = cdgmm(U_1_c, psi[n2][resU1])
             U_2_c = subsample_fourier(U_2_c, k=2 ** max(j2 - resU1 - OS, 0))
             U_2_c = fft(U_2_c, 'C2C', inverse=True)

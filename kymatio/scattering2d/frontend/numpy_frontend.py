@@ -16,6 +16,11 @@ class ScatteringNumPy2D(ScatteringNumPy, ScatteringBase2D):
     def scattering(self, input, local=False):
         if not type(input) is np.ndarray:
             raise TypeError('The input should be a NumPy array.')
+            
+        if np.isrealobj(input):
+            loc_cplx = False
+        else:
+            loc_cplx = True
 
         if len(input.shape) < 2:
             raise RuntimeError('Input array must have at least two dimensions.')
@@ -36,7 +41,7 @@ class ScatteringNumPy2D(ScatteringNumPy, ScatteringBase2D):
         input = input.reshape((-1,) + signal_shape)
 
         S = scattering2d(input, self.pad, self.unpad, self.backend, self.J,
-                self.L, self.OS, self.phi, self.psi, self.max_order, self.out_type, local=local)
+                self.L, self.OS, self.phi, self.psi, self.max_order, self.out_type, local=local, loc_cplx=loc_cplx)
 
         if self.out_type == 'array':
             if local:

@@ -17,7 +17,7 @@ class ScatteringTorch2D(ScatteringTorch, ScatteringBase2D):
         self.register_filters()
 
     def register_single_filter(self, v, n):
-        current_filter = torch.from_numpy(v).unsqueeze(-1)
+        current_filter = torch.from_numpy(v).unsqueeze(-1).contiguous()
         self.register_buffer('tensor' + str(n), current_filter)
         return current_filter
 
@@ -83,11 +83,13 @@ class ScatteringTorch2D(ScatteringTorch, ScatteringBase2D):
 
         if not input.is_contiguous():
             raise RuntimeError('Tensor must be contiguous.')
+            
+        loc_cplx = input.shape[-1] == 2 # We assume that we have a complex input if last dim is of length 2
 
-        if (input.shape[-1] != self.N or input.shape[-2] != self.M) and not self.pre_pad:
+        if (input.shape[-1 - loc_cplx * 1] != self.N or input.shape[-2 - loc_cplx * 1] != self.M) and not self.pre_pad:
             raise RuntimeError('Tensor must be of spatial size (%i,%i).' % (self.M, self.N))
 
-        if (input.shape[-1] != self.N_padded or input.shape[-2] != self.M_padded) and self.pre_pad:
+        if (input.shape[-1 - loc_cplx * 1] != self.N_padded or input.shape[-2 - loc_cplx * 1] != self.M_padded) and self.pre_pad:
             raise RuntimeError('Padded tensor must be of spatial size (%i,%i).' % (self.M_padded, self.N_padded))
 
         if not self.out_type in ('array', 'list'):
@@ -95,13 +97,13 @@ class ScatteringTorch2D(ScatteringTorch, ScatteringBase2D):
 
         phi, psi = self.load_filters()
 
-        batch_shape = input.shape[:-2]
-        signal_shape = input.shape[-2:]
+        batch_shape = input.shape[:-2 - loc_cplx * 1]
+        signal_shape = input.shape[-2 - loc_cplx * 1:]
 
         input = input.reshape((-1,) + signal_shape)
-
+        
         S = scattering2d(input, self.pad, self.unpad, self.backend, self.J,
-                            self.L, self.OS, phi, psi, self.max_order, self.out_type, local=local)
+                            self.L, self.OS, phi, psi, self.max_order, self.out_type, local=local, loc_cplx=loc_cplx)
 
         if self.out_type == 'array':
             if local:

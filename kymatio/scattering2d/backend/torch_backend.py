@@ -6,7 +6,7 @@ from collections import namedtuple
 
 BACKEND_NAME = 'torch'
 
-from ...backend.torch_backend import _is_complex, cdgmm, type_checks, Modulus, concatenate, mean
+from ...backend.torch_backend import _is_complex, cdgmm, type_checks, Modulus, concatenate, mean, real
 from ...backend.base_backend import FFT
 
 
@@ -68,23 +68,34 @@ class Pad(object):
                 Complex torch tensor that has been padded.
 
         """
-        batch_shape = x.shape[:-2]
-        signal_shape = x.shape[-2:]
-        x = x.reshape((-1, 1) + signal_shape)
-        if not self.pre_pad:
-            x = self.padding_module(x)
+        loc_cplx = x.shape[-1] == 2 # We assume that we have a complex input:
+            
+        # batch_shape = x.shape[:-2]
+        # signal_shape = x.shape[-2:]
+        # x = x.reshape((-1, 1) + signal_shape)
+        # if not self.pre_pad:
+        #     x = self.padding_module(x)
 
-            # Note: PyTorch is not effective to pad signals of size N-1 with N
-            # elements, thus we had to add this fix.
-            if self.pad_size[0] == self.input_size[0]:
-                x = torch.cat([x[:, :, 1, :].unsqueeze(2), x, x[:, :, x.shape[2] - 2, :].unsqueeze(2)], 2)
-            if self.pad_size[2] == self.input_size[1]:
-                x = torch.cat([x[:, :, :, 1].unsqueeze(3), x, x[:, :, :, x.shape[3] - 2].unsqueeze(3)], 3)
+        #     # Note: PyTorch is not effective to pad signals of size N-1 with N
+        #     # elements, thus we had to add this fix.
+        #     if self.pad_size[0] == self.input_size[0]:
+        #         x = torch.cat([x[:, :, 1, :].unsqueeze(2), x, x[:, :, x.shape[2] - 2, :].unsqueeze(2)], 2)
+        #     if self.pad_size[2] == self.input_size[1]:
+        #         x = torch.cat([x[:, :, :, 1].unsqueeze(3), x, x[:, :, :, x.shape[3] - 2].unsqueeze(3)], 3)
 
-        output = x.new_zeros(x.shape + (2,))
-        output[..., 0] = x
-        output = output.reshape(batch_shape + output.shape[-3:])
-        return output
+        if loc_cplx:
+            return x
+        else:
+            output = x.new_zeros(x.shape + (2,))
+            output[..., 0] = x
+            return output
+
+        # output = x.new_zeros(x.shape + (2,))
+        # output[..., 0] = x
+        # if loc_cplx:
+        #     output[..., 1] = x_im
+        # output = output.reshape(batch_shape + output.shape[-3:])
+        # return output
 
 def unpad(in_):
     """Unpads input.
@@ -151,7 +162,7 @@ fft = FFT(lambda x: torch.fft(x, 2, normalized=False),
           type_checks)
 
 
-backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate', 'mean'])
+backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate', 'mean', 'real'])
 backend.name = 'torch'
 backend.cdgmm = cdgmm
 backend.mean = mean
@@ -160,4 +171,5 @@ backend.subsample_fourier = SubsampleFourier()
 backend.fft = fft
 backend.Pad = Pad
 backend.unpad = unpad
+backend.real = real
 backend.concatenate = lambda x, axis: concatenate(x, axis)

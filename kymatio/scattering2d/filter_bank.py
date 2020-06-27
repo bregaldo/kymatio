@@ -74,7 +74,7 @@ def filter_bank(M, N, J, L=8, cplx=False):
                 psi['j'] = j
                 psi['theta'] = theta + L
                 for res in range(min(j + 1, max(J - 1, 1))):
-                    psi[res] = fft2(np.conj(ifft2(filters['psi'][-L][res]))).real
+                    psi[res] = np.real(fft2(np.conj(ifft2(filters['psi'][-L][res]))))
                 filters['psi'].append(psi)
 
     filters['phi'] = {}

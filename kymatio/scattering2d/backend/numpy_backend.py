@@ -6,7 +6,7 @@ from collections import namedtuple
 BACKEND_NAME = 'numpy'
 
 
-from ...backend.numpy_backend import modulus, cdgmm, mean
+from ...backend.numpy_backend import modulus, cdgmm, mean, real
 from ...backend.base_backend import FFT
 
 
@@ -89,7 +89,7 @@ def concatenate(arrays, axis):
     return np.stack(arrays, axis=axis)
 
 
-backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate', 'mean'])
+backend = namedtuple('backend', ['name', 'cdgmm', 'modulus', 'subsample_fourier', 'fft', 'Pad', 'unpad', 'concatenate', 'mean', 'real'])
 backend.name = 'numpy'
 backend.mean = mean
 backend.cdgmm = cdgmm
@@ -101,4 +101,5 @@ backend.fft = FFT(lambda x:np.fft.fft2(x),
                   lambda x:None)
 backend.Pad = Pad
 backend.unpad = unpad
+backend.real = real
 backend.concatenate = concatenate
